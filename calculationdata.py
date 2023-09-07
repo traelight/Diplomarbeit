@@ -17,7 +17,7 @@
 #           https://de.wikipedia.org/wiki/IEEE_754  
 #
 # Code Referenzen: 
-#   1  - send_email_alert: https://docs.python.org/3/library/email.examples.html
+#   1  - send_email_alert: https://bc-robotics.com/tutorials/sending-email-using-python-raspberry-pi/
 #----------------------------------------------------------------------------------------------------------
 #   Rev 1.0  Eren Karkin 6.09.23
 #----------------------------------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ from email.mime.multipart import MIMEMultipart
 
 # Email Konfiguration (Code Referenz 1)
 sender_email = 'raspitesto@gmail.com'
-sender_password = 'Raspi_testo_123'
+sender_password = 'qcnrrxnklpczvjkk'
 receiver_email = 'erenkarkin210300@gmail.com'
 subject = 'Warnmeldung: Atomuhr Genauigkeit'
 message_text = 'Die Atomuhr Genauigkeit ist nicht mehr gewährleistet. Keine Kalibration durchführen. \n Dies ist ein automatisch generierte Mail des Raspis'
@@ -71,8 +71,8 @@ def send_email_alert():
 
 #-------------------------#Berechnung Funktion#--------------------------------------------------------------------
 # Toleranz definition
-Toleranz = float(2.9e-14)
-negativToleranz = float(-2.9e-14)
+Toleranz = float(1.9e-14) 
+negativToleranz = float(-1.9e-14)
 
 def check_atomuhr_accuracy (input_hex):
     final_value = float (struct.unpack('<d', bytes.fromhex(input_hex))[0])  # Umwandlung von string auf bytes + Verarbeitung/Speicherung des double float Wert für Berechnung
