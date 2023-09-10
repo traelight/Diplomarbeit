@@ -28,8 +28,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QDateTime, Qt, QTimer, pyqtSignal, QObject
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QLabel, QTextEdit, QVBoxLayout, QHBoxLayout,QAction
 # HeaderFile Imports
-from calculationdata_KOPIE import *
-from definitions_functions_KOPIE import *
+from calculationdata import *
+from definitions_functions import *
 
 # Config der Seriellenschnittstelle
 
