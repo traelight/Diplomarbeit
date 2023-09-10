@@ -18,6 +18,8 @@
 #------------------------------------------------------------------------------------------------------
 #   Rev 1.0 Eren Karkin 6.09.23 
 #       - OHNE GUI
+#   Rev 2.0 Eren Karkin 6.09.23 
+#       - Mit Vorlage_GUI ersetzt - Wird nicht mehr gebraucht mit GUI Code
 #------------------------------------------------------------------------------------------------------
 # Python Library Imports
 import time 
@@ -25,9 +27,11 @@ import serial
 import struct
 
 # Header Files Imports
-from calculationdata import check_atomuhr_accuracy
-from definitions_functions import *
+from calculationdata_GUI import check_atomuhr_accuracy
+from definitions_functions_GUI import *
+from Vorlage_GUI import *
 
+'''
  # Serielle Einstellungen
 ser = serial.Serial(       
    port='COM1',
@@ -37,28 +41,30 @@ ser = serial.Serial(
    bytesize=serial.EIGHTBITS,
 )
 
+
 #-----------------------------Main---------------------------------------------------------------------
-while True:  # Endlosschleife
+#while True:  # Endlosschleife
+ 
+#data = read_serial(ser)                               # Einlesen der Daten 
+found = check_for_character(file_path, target_character)    # Schlusszeichen'0a0a' bzw. '\n\n' suchen
+
+#if data != '':                                        # Solange Daten gesendet werden 
+if found:                                         # Wenn Alle Daten empfangen wurden 
+
+    #print(f"Character '{target_character}' wurde gefunden in der Datei.")
+
+    hex_data = str (find_and_write_target(file_path, target_character))    # Konvertierung in String für Umrechnung in Double Float  
+    print(hex_data)          
+    result = check_atomuhr_accuracy(hex_data)     # Berechnung ob Abweichung innerhalb Toleranz ist             
+    print(result)
     
-    data = read_serial(ser)                               # Einlesen der Daten 
-    found = check_for_character(file_path, target_character)    # Schlusszeichen'0a0a' bzw. '\n\n' suchen
+    #time.sleep(300)
+    #countdown_timer(10)           # 10 Sec Aktualisierungszeit
     
-    if data != '':                                        # Solange Daten gesendet werden 
-        if found:                                         # Wenn Alle Daten empfangen wurden 
-            print(f"Character '{target_character}' wurde gefunden in der Datei.")
-       
-            hex_data = str (find_and_write_target(file_path, target_character))    # Konvertierung in String für Umrechnung in Double Float  
-            print(hex_data)          
-            result = check_atomuhr_accuracy(hex_data)     # Berechnung ob Abweichung innerhalb Toleranz ist             
-            print(result)
-            
-            countdown_timer(10)           # 10 Sec Aktualisierungszeit
-        
-        else:
-            print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
-            f = open("data_test.txt", "a")                  # öffne Datei, falls es nicht gibt, kreiren der Datei 
-            f.write(data)                                   # Schreibe in Datei
-            f.close()                                       # Schliesse Datei
-                                            
-                
-            
+    
+        #else:
+        #print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
+        # f = open("data_test.txt", "a")                  # öffne Datei, falls es nicht gibt, kreiren der Datei 
+        # f.write(data)                                   # Schreibe in Datei
+        # f.close()                                       # Schliesse Datei
+'''
