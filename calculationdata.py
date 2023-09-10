@@ -24,6 +24,7 @@
 # Python Library Imports
 import math
 import struct 
+
 # Py Mail Library Imports
 import smtplib
 from email.mime.text import MIMEText
@@ -33,7 +34,7 @@ from email.mime.multipart import MIMEMultipart
 
 # Email Konfiguration (Code Referenz 1)
 sender_email = 'raspitesto@gmail.com'
-sender_password = 'Raspi_testo_123'
+sender_password = 'qcnrrxnklpczvjkk'
 receiver_email = 'erenkarkin210300@gmail.com'
 subject = 'Warnmeldung: Atomuhr Genauigkeit'
 message_text = 'Die Atomuhr Genauigkeit ist nicht mehr gewährleistet. Keine Kalibration durchführen. \n Dies ist ein automatisch generierte Mail des Raspis'
@@ -75,24 +76,26 @@ Toleranz = float(2.9e-14)
 negativToleranz = float(-2.9e-14)
 
 def check_atomuhr_accuracy (input_hex):
+    #global final_value
     final_value = float (struct.unpack('<d', bytes.fromhex(input_hex))[0])  # Umwandlung von string auf bytes + Verarbeitung/Speicherung des double float Wert für Berechnung
-    print(final_value)
-    
+    #print(final_value)
+    return final_value
+
+def check_status(final_value):
     #Berechnung/Vergleich von Toleranz und Abweichung
     if  final_value > 0: # positive Abweichung
         if Toleranz >= final_value:                                # Wenn Toleranz grössergleich Abweichung ist = gut
-            return 'Atomuhr Genauigkeit ist gewährleistet'
+            return True         #'Atomuhr Genauigkeit ist gewährleistet'
         else:
-            send_email_alert()                  # Warn Mail Sendung
-            return 'Atomuhr Genauigkeit ist NICHT gewährleistet. Keine Kalibration durchführen !'
+            #send_email_alert()                  # Warn Mail Sendung
+            return False        #'Atomuhr Genauigkeit ist NICHT gewährleistet. Keine Kalibration durchführen !'
     elif final_value < 0: #negative Abweichung
         if negativToleranz <= final_value:                          # Wenn Toleranz kleinergleich Abweichung ist = gut/umgekehrt wegen negativabfrage
-            return 'Atomuhr Genauigkeit ist gewährleistet'
+            return True         #'Atomuhr Genauigkeit ist gewährleistet'
         else:
-            send_email_alert()                  # Warn Mail Sendung
-            return 'Atomuhr Genauigkeit ist NICHT gewährleistet. Keine Kalibration durchführen!'
+            #send_email_alert()                  # Warn Mail Sendung
+            return False        #'Atomuhr Genauigkeit ist NICHT gewährleistet. Keine Kalibration durchführen !'
     else:
-        return ('Berechnung fehlgeschlagen')
-
+        return False #('Berechnung fehlgeschlagen')
 
 
