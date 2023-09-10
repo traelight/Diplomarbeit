@@ -20,6 +20,9 @@
 #   1  - send_email_alert: https://docs.python.org/3/library/email.examples.html
 #----------------------------------------------------------------------------------------------------------
 #   Rev 1.0  Eren Karkin 6.09.23
+#           - Ohne GUI
+#   Rev 2.0  Eren Karkin 10.09.23
+#           - Mit GUI
 #----------------------------------------------------------------------------------------------------------
 # Python Library Imports
 import math
