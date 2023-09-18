@@ -355,7 +355,7 @@ if __name__ == "__main__":
     # Standard pyqt5 Konfiguartionen um Fenster zu generieren
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QWidget()  
+    MainWindow = QtWidgets.QMainWindow ()  
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
