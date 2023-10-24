@@ -34,18 +34,21 @@
 #------------------------------------------------------------------------------------------------------
 
 # PyQt5 Library Imports
-from threading import *
+import typing
+import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QDateTime, Qt, QTimer, pyqtSignal, QObject
+#from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QLabel, QTextEdit, QVBoxLayout, QHBoxLayout,QAction, QMessageBox
 from PyQt5.QtWidgets import *
-
+from threading import *
+  
 # HeaderFile Imports
 from calculationdata_GUI import *
 from definitions_functions_GUI import *
 
 
-
 # Config der Seriellenschnittstelle
+
  # Serielle Einstellungen
 ser = serial.Serial(       
    port='COM1',
@@ -83,12 +86,12 @@ def read_data():
                 Mailstatus = True
         
             print(result)
-    
-        else:
-            print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
-            f = open("data_test.txt", "a")                  # öffne Datei, falls es nicht gibt, kreiren der Datei 
-            f.write(data)                                   # Schreibe in Datei
-            f.close()                                       # Schliesse Datei    
+        
+    else:
+        print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
+        with open (file_path, 'w') as file:
+            file.write(data)
+
     return result
 
 
@@ -248,12 +251,26 @@ class Ui_MainWindow(object):
         self.countdown_timer = QTimer(MainWindow)
         self.countdown_timer.timeout.connect(self.update_countdown) # Binde den Countdown Timer mit der "update_countdown" Funktion
         # Initialisiere Dauer in Sekunden (Bei Änderung: Hier und in der Funktion [Reset Countdown Dauer] )
-        self.countdown_duration = 10
+        self.countdown_duration = 10 
+        
        
         self.start_countdown()
         
+        self.thread()
         
-    
+   
+    #------------------ THREADING für Serial --------------------------
+    def thread(self):
+        t1 = Thread(target=self.Operation)
+        t1.start()
+  
+    def Operation(self):
+        while True:
+            time.sleep(9000) # 2.5h vorher
+            read_data()
+                
+            
+        
    #------------------START Nachricht für Logging der Abweichung FUNKTION--------------------------
     def add_message(self):                  
         current_datetime = QtCore.QDateTime.currentDateTime()
@@ -276,8 +293,9 @@ class Ui_MainWindow(object):
             palette.setColor(QtGui.QPalette.Window, QtGui.QColor(255, 0, 0))  # Rot
             #self.label_status.setText("Status: Nicht Erfüllt")
             self.led_label.setPalette(palette)
+            
     #----------------- END LED FUNKTION-----------------------------
-       
+    
     #-----------------START COUNTDOWN TIMER FUNKTION----------------
     def start_countdown(self):
         self.countdown_timer.start(1000)  # Sekunden Takt [in ms]
@@ -297,27 +315,26 @@ class Ui_MainWindow(object):
                     self.label_7.setText((" Neuen Daten wurden erkannt "))
                     self.label_7.setStyleSheet("color: blue;")
                     ui.set_led_color(result)                     # LED Farbe ändern bei result innerhalb = True --> Grün andern falls Rot
-                    if result == False:                           #FALSE TESTZWECKE-->TRUE   # Loggen der Abweichung 
+                    if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
                         self.add_message()
-                    if Mailstatus == False:                       # Warnmeldung Pop Up Fenster öffnen
+                    if Mailstatus == False:                      # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen
                         self.show_popup()   
                         
                 else: 
                     self.label_7.setText((" Keine neuen Daten wurden erkannt "))
                     self.label_7.setStyleSheet("color: red;")
                     ui.set_led_color(result)      
-                    if result == True: #FALSE TESTZWECKE-->TRUE  # Loggen der Abweichung 
+                    if result == False:                     # FALSE; TESTZWECKE-->TRUE  # Loggen der Abweichung 
                         self.add_message()
-                    if Mailstatus == True:                       # Warnmeldung Pop Up Fenster öffnen
+                    if Mailstatus == False:                 # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen
                         self.show_popup()  
                         
                 self.label_2.setText(str(float_value))           # Anzeige der jetztige Abweichung
-                self.countdown_duration = 10  # Reset Countdown Dauer 
+                self.countdown_duration = 10800  # Reset Countdown Dauer 
                 self.countdown_timer.start(1000)  # Wiederhole Countdown Timer
             else:
-                read_data()
-                self.countdown_label.setText(" Daten werden neu gelesen ")         
-                time.sleep(5)
+                
+                self.countdown_label.setText(" Daten werden neu gelesen ")
                 
                 
     #----------------- END COUNTDOWN TIMER FUNKTION-----------------
@@ -343,19 +360,18 @@ class Ui_MainWindow(object):
         msg.setText (" Atomuhr Genauigkeit wurde nicht erfüllt! \n Warnmeldung geschickt an:\n erenkarkin210300@gmail.com ")
         msg.setIcon (QMessageBox.Warning)
        
-        # Create a QTimer to close the message box after 10 seconds (10000 milliseconds)
+        # Generie ein QTimer um die messagebox nach 10 sekunden zu schliessen (millisekunden)
         timer = QTimer()
-        timer.timeout.connect(msg.accept)  # Close the message box
-        timer.start(5000)  # 5 seconds
+        timer.timeout.connect(msg.accept)  # Schliesse die Box
+        timer.start(5000)  # 5 Sekunden
         msg.exec_()
     #----------------- END POP UP FENSTER FUNKTION----------------
-    
 #--------------------------------------- GUI MAIN-----------------------------------------
 if __name__ == "__main__":
     # Standard pyqt5 Konfiguartionen um Fenster zu generieren
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow ()  
+    MainWindow = QtWidgets.QMainWindow()            
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
