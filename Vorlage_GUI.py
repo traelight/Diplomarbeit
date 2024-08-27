@@ -251,7 +251,7 @@ class Ui_MainWindow(object):
         #-------- Generierung des QTextedit Box---------
         MainWindow.setCentralWidget(self.centralwidget)  
         self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
-        self.textEdit.setGeometry(QtCore.QRect(550, 95, 200, 200))
+        self.textEdit.setGeometry(QtCore.QRect(550, 60, 170, 170))
         self.textEdit.setObjectName("textEdit")
         self.textEdit.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.textEdit.setStyleSheet ("background-color: lightgray;")  #("background-color: rgba(0, 0, 0, 0);")
