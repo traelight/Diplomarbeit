@@ -23,6 +23,8 @@
 #           - Ohne GUI
 #   Rev 2.0  Eren Karkin 10.09.23
 #           - Mit GUI
+#   Rev 2.1  Eren Karkin 27.08.24
+#           - Email Empfänger auf "BEugster@testotis.ch" geändert
 #----------------------------------------------------------------------------------------------------------
 # Python Library Imports
 import math
@@ -38,7 +40,7 @@ from email.mime.multipart import MIMEMultipart
 # Email Konfiguration (Code Referenz 1)
 sender_email = 'raspitesto@gmail.com'
 sender_password = 'qcnrrxnklpczvjkk'
-receiver_email = 'erenkarkin210300@gmail.com'
+receiver_email = 'BEugster@testotis.ch'
 subject = 'Warnmeldung: Atomuhr Genauigkeit'
 message_text = 'Die Atomuhr Genauigkeit ist nicht mehr gewährleistet. Keine Kalibration durchführen. \n Dies ist ein automatisch generierte Mail des Raspis'
 
