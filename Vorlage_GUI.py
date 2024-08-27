@@ -32,7 +32,7 @@
 #   Rev 1.2 Eren Karkin 13.09.23 
 #           - Log Editor
 #
-#   Rev 1.3 Eren Karkin 27.06.24 
+#   Rev 1.3 Eren Karkin 27.08.24 
 #        - Threading modifiziert und optimisiert
 #        - Stundenanzeige hinzugefügt 
 #        - Daten-Aktualiserungstext entfernt
