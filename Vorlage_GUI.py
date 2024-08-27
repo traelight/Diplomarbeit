@@ -31,27 +31,33 @@
 #        - Vor Beginn des Countdown, Daten initialisieren
 #   Rev 1.2 Eren Karkin 13.09.23 
 #           - Log Editor
+#
+#   Rev 1.3 Eren Karkin 27.06.24 
+#        - Threading modifiziert und optimisiert
+#        - Stundenanzeige hinzugefügt 
+#        - Daten-Aktualiserungstext entfernt
 #------------------------------------------------------------------------------------------------------
 
-# PyQt5 Library Imports
+ PyQt5 Library Imports
 import typing
-import logging
+import sys
+import serial
+import threading
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QDateTime, Qt, QTimer, pyqtSignal, QObject
 #from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QLabel, QTextEdit, QVBoxLayout, QHBoxLayout,QAction, QMessageBox
 from PyQt5.QtWidgets import *
-from threading import *
-  
 # HeaderFile Imports
 from calculationdata_GUI import *
 from definitions_functions_GUI import *
-
 
 # Config der Seriellenschnittstelle
 
  # Serielle Einstellungen
 ser = serial.Serial(       
-   port='COM1',
+   #port='COM1',     # Für Windows  
+   port = '/dev/ttyUSB0', # Für Linux
    baudrate=9600,
    parity=serial.PARITY_NONE,
    stopbits=serial.STOPBITS_ONE,
@@ -59,17 +65,53 @@ ser = serial.Serial(
 )
 
 
-#--------------------- Einlesen der Daten Funktion ---------------------
+#--------------------- Einlesen der Daten Funktion ohne serielle Schnittstelle ---------------------
 def read_data(): 
-    data = read_serial(ser)                               # Einlesen der Daten 
+    #data = read_serial(ser)                               # Einlesen der Daten 
     global found
     found = check_for_character(file_path, target_character)    # Schlusszeichen'0a0a' bzw. '\n\n' suchen
     
+    #if data != '':                                        # Solange Daten gesendet werden 
+    if found:                                         # Wenn Alle Daten empfangen wurden 
+        
+        #print(f"Character '{target_character}' wurde gefunden in der Datei.")
+        hex_data = str (find_and_write_target(file_path, target_character))    # Konvertierung in String für Umrechnung in Double Float  
+        print(hex_data)          
+                    
+        global float_value          
+        float_value = check_atomuhr_accuracy (hex_data)         #  double float Zahl (Abweichung) wird exportiert
+        global  old_float_value                                 
+        old_float_value = float_value                           #  vorherige double float Zahl wird gespeichert
+
+        global result 
+        global Mailstatus   
+        result = check_status(float_value)                      #  double float Zahl (Abweichung) wird verglichen mit Toleranz ob nicht erfüllt/erfüllt 
+        if result != False:
+            Mailstatus = False
+        else:
+            Mailstatus = True
+    
+        print(result)
+    
+    #else:
+        #print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
+        #f = open("data_test.txt", "a")                  # öffne Datei, falls es nicht gibt, kreiren der Datei 
+        #f.write(data)                                   # Schreibe in Datei
+        #f.close()                                       # Schliesse Datei    
+    return result
+
+#--------------------- Einlesen der Daten Funktion mit serielle Schnittstelle ---------------------
+def read_data_ser(): 
+    data = read_serial(ser)                               # Einlesen der Daten 
+    #print(data)
+    global found_new
+    found_new = check_for_character(file_path_new, target_character)    # Schlusszeichen'0a0a' bzw. '\n\n' suchen
+    
     if data != '':                                        # Solange Daten gesendet werden 
-        if found:                                         # Wenn Alle Daten empfangen wurden 
+        if found_new:                                         # Wenn Alle Daten empfangen wurden 
             
             #print(f"Character '{target_character}' wurde gefunden in der Datei.")
-            hex_data = str (find_and_write_target(file_path, target_character))    # Konvertierung in String für Umrechnung in Double Float  
+            hex_data = str (find_and_write_target(file_path_new, target_character))    # Konvertierung in String für Umrechnung in Double Float  
             print(hex_data)          
                         
             global float_value          
@@ -84,22 +126,28 @@ def read_data():
                 Mailstatus = False
             else:
                 Mailstatus = True
-        
+    
             print(result)
-        
-    else:
-        print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
-        with open (file_path, 'w') as file:
-            file.write(data)
-
+            
+        else:
+            print(f"Character '{target_character}' noch nicht gefunden in der Datei.")
+            f = open("data_test.txt", "a")                  # öffne Datei, falls es nicht gibt, kreiren der Datei  
+            f.write(data)                                   # Schreibe in Datei
+            f.close()                                       # Schliesse Datei    
+    
     return result
-
-
 #--------------------------------- Hauptfenster Klasse-----------------------------------
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
+         
+         # Get the screen's geometry
+        screen_geometry = QDesktopWidget().screenGeometry()
+
+        # Resize the main window to fit the screen
+        MainWindow.setGeometry(screen_geometry)
+        
+        #MainWindow.resize(800, 480)#800,600
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.formLayoutWidget = QtWidgets.QWidget(self.centralwidget)
@@ -129,7 +177,7 @@ class Ui_MainWindow(object):
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.label_2)
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(50, 350, 661, 191))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(50, 250, 661, 191))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -138,7 +186,7 @@ class Ui_MainWindow(object):
         self.label_4 = QtWidgets.QLabel(self.gridLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(22)
+        font.setPointSize(18)
         font.setBold(True)
         font.setItalic(False)
         font.setWeight(75)
@@ -149,7 +197,7 @@ class Ui_MainWindow(object):
         self.label_3 = QtWidgets.QLabel(self.gridLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(22)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.label_3.setFont(font)
@@ -160,7 +208,7 @@ class Ui_MainWindow(object):
         self.label_5.setGeometry(QtCore.QRect(10, 10, 431, 41))
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(28)
+        font.setPointSize(20)
         font.setBold(True)
         font.setItalic(True)
         font.setWeight(75)
@@ -168,7 +216,7 @@ class Ui_MainWindow(object):
         self.label_5.setObjectName("label_5")
         #--------------Mittige Design Linie ------------------------------
         self.line = QtWidgets.QFrame(self.centralwidget)
-        self.line.setGeometry(QtCore.QRect(10, 330, 771, 16))
+        self.line.setGeometry(QtCore.QRect(10, 230, 771, 16))
         self.line.setFrameShape(QtWidgets.QFrame.HLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line.setObjectName("line")
@@ -183,10 +231,10 @@ class Ui_MainWindow(object):
         self.label_7.setGeometry(QtCore.QRect(50, 40, 551, 131))     #(50, 40, 351, 41)) 
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(22)
+        font.setPointSize(18)
         self.label_7.setFont(font)
         self.label_7.setObjectName("label_7")
-        MainWindow.setCentralWidget(self.centralwidget)    
+        MainWindow.setCentralWidget(self.centralwidget)  
         
         #----------------LOG Text Editor -----------------------------
         
@@ -199,6 +247,7 @@ class Ui_MainWindow(object):
         font.setBold(True)
         self.textEditTitel.setFont(font)
         self.textEditTitel.setObjectName("textEditTitel")
+        
         #-------- Generierung des QTextedit Box---------
         MainWindow.setCentralWidget(self.centralwidget)  
         self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
@@ -232,16 +281,16 @@ class Ui_MainWindow(object):
         
         #------------ Create a label for the LED------------------
         self.led_label = QtWidgets.QLabel(self.centralwidget)
-        self.led_label.setGeometry(QtCore.QRect(500, 370, 100, 50))  # Adjust the position and size as needed
+        self.led_label.setGeometry(QtCore.QRect(500, 270, 100, 50))  # Adjust the position and size as needed
         self.led_label.setAutoFillBackground(True)
         self.set_led_color(False)  # Set the initial color to red (False)
     
         #----------- Create a label for the countdown timer--------
         self.countdown_label = QtWidgets.QLabel(self.centralwidget)
-        self.countdown_label.setGeometry(QtCore.QRect(390, 470, 300, 50))
+        self.countdown_label.setGeometry(QtCore.QRect(390, 370, 300, 50))
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(20)
+        font.setPointSize(18)
         font.setBold(True)
         self.countdown_label.setFont(font)
         self.countdown_label.setObjectName("countdown_label")
@@ -250,26 +299,76 @@ class Ui_MainWindow(object):
         # Generiere den Countdown Timer mit dem QTimer Modul
         self.countdown_timer = QTimer(MainWindow)
         self.countdown_timer.timeout.connect(self.update_countdown) # Binde den Countdown Timer mit der "update_countdown" Funktion
-        # Initialisiere Dauer in Sekunden (Bei Änderung: Hier und in der Funktion [Reset Countdown Dauer] )
-        self.countdown_duration = 10 
+        # Initialisiere Dauer in Sekunden
+        self.countdown_duration = 18000    # sec --> Stunden ändern
         
-       
+        #Erste Initiasierung der Daten
+        read_data()
+        self.label_2.setText(str(float_value)) 
+        ui.set_led_color(result) 
+        # Starte den Countdown Timer  
         self.start_countdown()
-        
-        self.thread()
+        self.initSerial() 
         
    
-    #------------------ THREADING für Serial --------------------------
-    def thread(self):
-        t1 = Thread(target=self.Operation)
-        t1.start()
-  
-    def Operation(self):
-        while True:
-            time.sleep(9000) # 2.5h vorher
-            read_data()
+        #------------------THREADING --------------------------    
+        #initialiserung des Threading 
+    def initSerial(self): 
+        self.serial_thread = threading.Thread(target=self.read_serial_data_periodically)
+        self.serial_thread.daemon = True
+        self.serial_thread.start()
+        
+        #serielle Datenauslesung periodisch 
+    def read_serial_data_periodically(self):
+        print('read_serial_periodacally')
+            # Variabel deklaration
+        global final
+        global float_value_new 
+        global content 
+        
+        # Erste Initialisierung der Daten
+        hex_data = str (find_and_write_target(file_path_new, target_character))    # Konvertierung in String für Umrechnung in Double Float  
+        print(hex_data)          
+        float_value_new = check_atomuhr_accuracy (hex_data)         #  double float Zahl (Abweichung) wird exportiert
+    
+        duration = 16500 # sec --> Stunden ändern 
+        while True :
+            # Countdown bis zum nächsten Auslesebefehl
+            if duration != 0:          
+                time.sleep(1)
+                duration -= 1    
+                print(duration) 
                 
-            
+                # Löschen des Endzeichens um Daten zu aktualisieren, wird benötigt.
+                with open (file_path_new, 'r', encoding= 'utf-8') as file:  
+                    content = file.read()
+
+                for char in target_character:
+                    content = content.replace(char, '')
+
+                with open (file_path_new, 'w', encoding='utf-8') as file:
+                    file.write(content)     
+
+            else:  
+                self.read_serial_data()             # Aufruf zur serieller Auslesebefehl Funktion
+                final = check_for_character(file_path_new, target_character)    # Check ob Daten fertig gesendet wurden
+
+                if final:
+                    # Messwert Aktualisierung
+                    hex_data = str (find_and_write_target(file_path_new, target_character))    # Konvertierung in String für Umrechnung in Double Float  
+                    print(hex_data)          
+                    float_value_new = check_atomuhr_accuracy (hex_data)         #  double float Zahl (Abweichung) wird exportiert
+                    print(float_value_new)
+
+                    print('waiting to load...')
+                    time.sleep(10)
+                    duration = 16500 # sec --> Stunden ändern
+                
+        #Funktion des seriellen Auslesebefehl 
+    def read_serial_data(self):
+        print('read_serial')
+        read_data_ser()  
+                 
         
    #------------------START Nachricht für Logging der Abweichung FUNKTION--------------------------
     def add_message(self):                  
@@ -302,39 +401,44 @@ class Ui_MainWindow(object):
 
     def update_countdown(self):
         if self.countdown_duration >= 0:                         # Countdown Timer
-            mins, secs = divmod(self.countdown_duration, 60)
-            timeformat = '{:02d}:{:02d}'.format(mins, secs)      # Countdown Timer Format
+            hours, remainder = divmod(self.countdown_duration, 3600)
+            mins, secs = divmod(remainder, 60)
+            #mins, secs = divmod(self.countdown_duration, 60)
+            #timeformat = '{:02d}:{:02d}'.format(mins, secs)    # Countdown Timer Format
+            timeformat = '{:02d}:{:02d}:{:02d}'.format(hours, mins, secs)    # Countdown Timer Format
             self.countdown_label.setText(f"{timeformat}")
             self.countdown_duration -= 1
         else:
             self.countdown_timer.stop()                          # Countdown Timer Stop                     
             self.countdown_label.setText(" Daten neu lesen ")
             read_data()                                          # Daten neu lesen
-            if found:                                            # Sobald alle Daten gelesen wurden vergleiche ob es neue Daten gibt und
-                if float_value != old_float_value:
-                    self.label_7.setText((" Neuen Daten wurden erkannt "))
-                    self.label_7.setStyleSheet("color: blue;")
-                    ui.set_led_color(result)                     # LED Farbe ändern bei result innerhalb = True --> Grün andern falls Rot
-                    if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
+            if float_value_new != float_value:                                            # Sobald alle Daten gelesen wurden vergleiche ob es neue Daten gibt und
+                #if float_value != old_float_value:
+                #   self.label_7.setText((" Neuen Daten wurden erkannt "))
+                #    self.label_7.setStyleSheet("color: blue;")
+                ui.set_led_color(result)                     # LED Farbe ändern bei result innerhalb = True --> Grün andern falls Rot
+                if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
                         self.add_message()
-                    if Mailstatus == False:                      # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen
-                        self.show_popup()   
-                        
-                else: 
-                    self.label_7.setText((" Keine neuen Daten wurden erkannt "))
-                    self.label_7.setStyleSheet("color: red;")
-                    ui.set_led_color(result)      
-                    if result == False:                     # FALSE; TESTZWECKE-->TRUE  # Loggen der Abweichung 
+                if Mailstatus == True:                       # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen   
+                   self.show_popup()   
+            else: 
+                #self.label_7.setText((" Keine neuen Daten wurden erkannt "))
+                #   self.label_7.setStyleSheet("color: red;")
+                ui.set_led_color(result) 
+                if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
                         self.add_message()
-                    if Mailstatus == False:                 # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen
-                        self.show_popup()  
+                if Mailstatus == True:                      # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen
+                    self.show_popup() 
                         
-                self.label_2.setText(str(float_value))           # Anzeige der jetztige Abweichung
-                self.countdown_duration = 10800  # Reset Countdown Dauer 
-                self.countdown_timer.start(1000)  # Wiederhole Countdown Timer
-            else:
-                
-                self.countdown_label.setText(" Daten werden neu gelesen ")
+                self.label_2.setText(str(float_value_new))      # Anzeige der jetztige Abweichung
+                self.countdown_duration = 18000  # sec in Stunden ändern, Reset Countdown Dauer in sec, sec --> Stunden ändern
+                self.countdown_timer.start(1000)  # Wiederhole Countdown Timer in msec
+           
+            #read_data()
+            #self.countdown_label.setText(" Daten werden neu gelesen ")
+            self.label_2.setText(str(float_value))      # Anzeige der vorherigen Abweichung
+            self.countdown_duration = 18000  # sec in Stunden ändern, Reset Countdown Dauer in sec, sec --> Stunden ändern
+            self.countdown_timer.start(1000)  # Wiederhole Countdown Timer in msec
                 
                 
     #----------------- END COUNTDOWN TIMER FUNKTION-----------------
@@ -357,7 +461,7 @@ class Ui_MainWindow(object):
     def show_popup(self):
         msg = QMessageBox()
         msg.setWindowTitle ("Warnmeldung Mail")
-        msg.setText (" Atomuhr Genauigkeit wurde nicht erfüllt! \n Warnmeldung geschickt an:\n erenkarkin210300@gmail.com ")
+        msg.setText (" Atomuhr Genauigkeit wurde nicht erfüllt! \n Warnmeldung geschickt an:\n BEugster@testotis.ch ")
         msg.setIcon (QMessageBox.Warning)
        
         # Generie ein QTimer um die messagebox nach 10 sekunden zu schliessen (millisekunden)
