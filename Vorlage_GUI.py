@@ -419,7 +419,7 @@ class Ui_MainWindow(object):
                 ui.set_led_color(result)                     # LED Farbe ändern bei result innerhalb = True --> Grün andern falls Rot
                 if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
                         self.add_message()
-                if Mailstatus == True:                       # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen   
+                if Mailstatus == True:                       # TRUE; TESTZWECKE-->FALSE Warnmeldung Pop Up Fenster öffnen   
                    self.show_popup()   
             else: 
                 #self.label_7.setText((" Keine neuen Daten wurden erkannt "))
@@ -427,7 +427,7 @@ class Ui_MainWindow(object):
                 ui.set_led_color(result) 
                 if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
                         self.add_message()
-                if Mailstatus == True:                      # FALSE; TESTZWECKE-->TRUE Warnmeldung Pop Up Fenster öffnen
+                if Mailstatus == True:                      # TRUE; TESTZWECKE-->FALSE Warnmeldung Pop Up Fenster öffnen
                     self.show_popup() 
                         
                 self.label_2.setText(str(float_value_new))      # Anzeige der jetztige Abweichung
