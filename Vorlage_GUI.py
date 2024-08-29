@@ -32,13 +32,13 @@
 #   Rev 1.2 Eren Karkin 13.09.23 
 #           - Log Editor
 #
-#   Rev 1.3 Eren Karkin 27.08.24 
+#   Rev 1.3 Eren Karkin 27.06.24 
 #        - Threading modifiziert und optimisiert
 #        - Stundenanzeige hinzugefügt 
 #        - Daten-Aktualiserungstext entfernt
 #------------------------------------------------------------------------------------------------------
 
- PyQt5 Library Imports
+# PyQt5 Library Imports
 import typing
 import sys
 import serial
@@ -52,6 +52,7 @@ from PyQt5.QtWidgets import *
 from calculationdata_GUI import *
 from definitions_functions_GUI import *
 
+
 # Config der Seriellenschnittstelle
 
  # Serielle Einstellungen
@@ -63,7 +64,6 @@ ser = serial.Serial(
    stopbits=serial.STOPBITS_ONE,
    bytesize=serial.EIGHTBITS,
 )
-
 
 #--------------------- Einlesen der Daten Funktion ohne serielle Schnittstelle ---------------------
 def read_data(): 
@@ -136,11 +136,12 @@ def read_data_ser():
             f.close()                                       # Schliesse Datei    
     
     return result
+
 #--------------------------------- Hauptfenster Klasse-----------------------------------
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-         
+        
          # Get the screen's geometry
         screen_geometry = QDesktopWidget().screenGeometry()
 
@@ -308,10 +309,9 @@ class Ui_MainWindow(object):
         ui.set_led_color(result) 
         # Starte den Countdown Timer  
         self.start_countdown()
-        self.initSerial() 
-        
-   
-        #------------------THREADING --------------------------    
+        self.initSerial()
+    
+    #------------------THREADING --------------------------    
         #initialiserung des Threading 
     def initSerial(self): 
         self.serial_thread = threading.Thread(target=self.read_serial_data_periodically)
@@ -368,16 +368,7 @@ class Ui_MainWindow(object):
     def read_serial_data(self):
         print('read_serial')
         read_data_ser()  
-                 
-        
-   #------------------START Nachricht für Logging der Abweichung FUNKTION--------------------------
-    def add_message(self):                  
-        current_datetime = QtCore.QDateTime.currentDateTime()
-        formatted_datetime = current_datetime.toString("yyyy-MM-dd hh:mm:ss")
-        message = f"----------------------------\n{formatted_datetime}: Abweichung ausserhalb: {str(float_value)}"  
-        self.textEdit.append(message)
-        
-          
+     
     #------------------START LED FUNKTION--------------------------
         # Generiere Funktion die LED 
     def set_led_color(self, is_active):
@@ -392,7 +383,6 @@ class Ui_MainWindow(object):
             palette.setColor(QtGui.QPalette.Window, QtGui.QColor(255, 0, 0))  # Rot
             #self.label_status.setText("Status: Nicht Erfüllt")
             self.led_label.setPalette(palette)
-            
     #----------------- END LED FUNKTION-----------------------------
     
     #-----------------START COUNTDOWN TIMER FUNKTION----------------
@@ -427,7 +417,7 @@ class Ui_MainWindow(object):
                 ui.set_led_color(result) 
                 if result == False:                          # FALSE; TESTZWECKE-->TRUE   Loggen der Abweichung 
                         self.add_message()
-                if Mailstatus == True:                      # TRUE; TESTZWECKE-->FALSE Warnmeldung Pop Up Fenster öffnen
+                if Mailstatus == True:                      # TRUE ; TESTZWECKE-->FALSEWarnmeldung Pop Up Fenster öffnen
                     self.show_popup() 
                         
                 self.label_2.setText(str(float_value_new))      # Anzeige der jetztige Abweichung
@@ -436,13 +426,11 @@ class Ui_MainWindow(object):
            
             #read_data()
             #self.countdown_label.setText(" Daten werden neu gelesen ")
-            self.label_2.setText(str(float_value))      # Anzeige der vorherigen Abweichung
-            self.countdown_duration = 18000  # sec in Stunden ändern, Reset Countdown Dauer in sec, sec --> Stunden ändern
-            self.countdown_timer.start(1000)  # Wiederhole Countdown Timer in msec
-                
-                
+            s#elf.label_2.setText(str(float_value))      # Anzeige der vorherigen Abweichung
+            #elf.countdown_duration = 18000  # sec in Stunden ändern, Reset Countdown Dauer in sec, sec --> Stunden ändern
+            #self.countdown_timer.start(1000)  # Wiederhole Countdown Timer in msec
     #----------------- END COUNTDOWN TIMER FUNKTION-----------------
-        
+    
     def retranslateUi(self, MainWindow):
         #----------- Alle Titel-------------
         _translate = QtCore.QCoreApplication.translate
@@ -450,7 +438,6 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "Jetztige Frequenzabweichung:"))
         self.label_4.setText(_translate("MainWindow", "Nächste Aktualisierung: "))
         self.label_3.setText(_translate("MainWindow", "Status Atomuhr Genauigkeit: "))
-        self.textEditTitel.setText(_translate("MainWindow", "Log Editor: "))
         #------------------
         self.label_5.setText(_translate("MainWindow", "Atomuhr Genauigkeit"))
         #------------------
@@ -464,10 +451,10 @@ class Ui_MainWindow(object):
         msg.setText (" Atomuhr Genauigkeit wurde nicht erfüllt! \n Warnmeldung geschickt an:\n BEugster@testotis.ch ")
         msg.setIcon (QMessageBox.Warning)
        
-        # Generie ein QTimer um die messagebox nach 10 sekunden zu schliessen (millisekunden)
+        # Create a QTimer to close the message box after 10 seconds (10000 milliseconds)
         timer = QTimer()
-        timer.timeout.connect(msg.accept)  # Schliesse die Box
-        timer.start(5000)  # 5 Sekunden
+        timer.timeout.connect(msg.accept)  # Close the message box
+        timer.start(5000)  # 5 seconds
         msg.exec_()
     #----------------- END POP UP FENSTER FUNKTION----------------
 #--------------------------------------- GUI MAIN-----------------------------------------
@@ -479,6 +466,7 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
+    #MainWindow.show()
     
     sys.exit(app.exec_())                           # Fenster schliessen
 
